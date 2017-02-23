@@ -1,0 +1,5 @@
+Seance
+*.o
+*.d
+*.*.sw*
+build/
