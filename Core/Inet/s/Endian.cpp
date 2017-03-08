@@ -1,9 +1,16 @@
 #include "Endian.h"
 
+union EndianValue
+{
+	char bytes[2];
+	uint16_t value;
+};
+
 bool isNetworkEndian(void)
 {
-	uint16_t val = 0xff00;
-	return (val & 0xff) == 0;
+	EndianValue endian;
+	endian.value = uint16_t(0xff00);
+	return endian.bytes[0] == 0xff;
 }
 
 uint64_t ntohll(uint64_t value)
