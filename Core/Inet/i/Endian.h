@@ -2,6 +2,7 @@
 #define __ENDIAN_H
 
 #include <cstdint>
+#include <arpa/inet.h>
 
 bool isNetworkEndian(void);
 

@@ -17,7 +17,8 @@ Frame::Frame(const FrameHeader& header):
 	mCRCBytesWritten(0),
 	mPayloadBytesWritten(0)
 {
-	if (header.headerParts.Length < 255)
+	header.headerParts.Length = ntohs(header.headerParts.Length);
+	if (header.headerParts.Length < FRAME_LENGTH_MAX)
 	{
 		mLength = header.headerParts.Length;
 		mPayload = new char[header.headerParts.Length];

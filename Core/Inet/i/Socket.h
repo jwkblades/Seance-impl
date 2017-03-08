@@ -6,11 +6,12 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <arpa/inet.h>
 #include <poll.h>
 #include <cstring>
 #include <errno.h>
 #include <cstdlib>
+
+#include "Endian.h"
 
 #include <iostream>
 using namespace std;
