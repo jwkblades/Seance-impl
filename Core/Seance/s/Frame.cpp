@@ -96,10 +96,8 @@ void Frame::write(const char* buffer, std::size_t length)
 	{
 		frameWriteHelper(cursor, length, mMaskBytesWritten, 4, mMask);
 	}
-	if (mHeader.headerParts.CRC)
-	{
-		frameWriteHelper(cursor, length, mCRCBytesWritten, 4, mCRC);
-	}
+
+	frameWriteHelper(cursor, length, mCRCBytesWritten, 4, mCRC);
 
 	frameWriteHelper(cursor, length, mPayloadBytesWritten, mLength, mPayload, false);
 }

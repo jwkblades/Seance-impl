@@ -30,27 +30,27 @@
  * |                                                           ... |
  * +---------------------------------------------------------------+
  *
- * FIN - The final packet of a message. This indicates that the previous
+ * FIN: The final packet of a message. This indicates that the previous
  *     message has been completed.
  *
- * RSP - 1 if this message is a response, 0 otherwise.
+ * RSP: 1 if this message is a response, 0 otherwise.
  *
- * MASK - 1 if there is a mask on the message payload, 0 otherwise. The client
+ * MASK: 1 if there is a mask on the message payload, 0 otherwise. The client
  *     _must_ always mask their messages with a suitably difficult to guess
  *     random 4-byte value. The server _may_ mask its messages as well.
  *
- * RSV0 - RSV4 - Reserved for future versions of Seance. _Must_ be 0, or the
+ * RSV0-RSV4: Reserved for future versions of Seance. _Must_ be 0, or the
  *     recipient _must_ close the connection.
  *
- * Opcode - The opcode for the message.
+ * Opcode: The opcode for the message.
  *
- * Length - Unsigned 16-bit value specifying the payload length.
+ * Length: Unsigned 16-bit value specifying the payload length.
  *     If Length == 65535, then the following 8 bytes provide the payload
  *     length as an unsigned 64-bit value.
  *
- * Extended Length - Unsigned 64-bit value, only present if Length == 65535.
+ * Extended Length: Unsigned 64-bit value, only present if Length == 65535.
  *
- * Message ID - Unsigned 32-bit value specifying a unique identifier for the
+ * Message ID: Unsigned 32-bit value specifying a unique identifier for the
  *     message that has been sent. Message IDs _must_ be monotonically
  *     increasing values (within their session (read socket connection),
  *     wrapping as appropriate.
@@ -59,19 +59,19 @@
  *     Server Message IDs _must_ have the first (most significant bit) set.
  *     Client Message IDs _must_ not have the first (most significant bit) set.
  *
- * Response to Message ID - Unsigned 32-bit value providing the Message ID to
+ * Response to Message ID: Unsigned 32-bit value providing the Message ID to
  *     which this message is a response. Only present if RSP is set to 1.
  *
- * Masking Key - Unsigned 32-bit value in which each byte of the value, in
+ * Masking Key: Unsigned 32-bit value in which each byte of the value, in
  *     order, is XORed against each byte of the payload, in order and wrapping
  *     as necessary. Only present if MASK is set to 1.
  *
- * CRC32 - The 32-bit CRC of the payload and header combined (with the CRC32
+ * CRC32: The 32-bit CRC of the payload and header combined (with the CRC32
  *     section being all zeroes during the CRC generation). _Must_ always be
  *     present. See [ISO 3309] for the CRC specification, or [RFC 1952] for a
  *     reference implementation.
  *
- * Payload Data - Length, or Extended Length bytes long. The Payload Data's
+ * Payload Data: Length, or Extended Length bytes long. The Payload Data's
  *     purpose is determined by the opcode provided, and may be outside this
  *     specification's scope.
  *
