@@ -184,7 +184,7 @@ public:
 	Frame(const FrameHeader& header);
 	~Frame(void);
 
-	void write(const char* buffer, std::size_t length);
+	void write(const uint8_t* buffer, std::size_t length);
 
 	uint64_t size(void) const;
 	void size(uint64_t newSize);
@@ -198,7 +198,7 @@ private:
 	uint32_t mRespondingToID;
 	uint32_t mMask;
 	uint32_t mCRC;
-	char* mPayload;
+	uint8_t* mPayload;
 
 	bool mLengthSet;
 	uint8_t mLengthBytesWritten;

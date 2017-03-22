@@ -17,11 +17,11 @@ Frame::Frame(const FrameHeader& header):
 	mCRCBytesWritten(0),
 	mPayloadBytesWritten(0)
 {
-	header.headerParts.Length = ntohs(header.headerParts.Length);
-	if (header.headerParts.Length < FRAME_LENGTH_MAX)
+	uint16_t headerLen =  ntohs(header.headerParts.Length);
+	if (headerLen < FRAME_LENGTH_MAX)
 	{
-		mLength = header.headerParts.Length;
-		mPayload = new char[header.headerParts.Length];
+		mLength = headerLen;
+		mPayload = new uint8_t[headerLen];
 		mLengthSet = true;
 	}
 }
@@ -33,7 +33,7 @@ Frame::~Frame(void)
 }
 
 template<typename T, typename U>
-std::size_t frameWriteHelper(char*& buffer, std::size_t& length, T& bytesWritten, const T maxBytes, U& destination, bool allowByteSwap = true)
+std::size_t frameWriteHelper(uint8_t*& buffer, std::size_t& length, T& bytesWritten, const T maxBytes, U& destination, bool allowByteSwap = true)
 {
 	if (bytesWritten >= maxBytes)
 	{
@@ -72,16 +72,16 @@ std::size_t frameWriteHelper(char*& buffer, std::size_t& length, T& bytesWritten
 	return i;
 }
 
-void Frame::write(const char* buffer, std::size_t length)
+void Frame::write(const uint8_t* buffer, std::size_t length)
 {
-	char* cursor = buffer;
+	uint8_t* cursor = buffer;
 	if (!mLengthSet)
 	{
 		frameWriteHelper(cursor, length, mLengthBytesWritten, 8, mLength);
 
 		if (mLengthBytesWritten == 8)
 		{
-			mPayload = new char[mLength];
+			mPayload = new uint8_t[mLength];
 			mLengthSet = true;
 		}
 	}
@@ -100,6 +100,36 @@ void Frame::write(const char* buffer, std::size_t length)
 	frameWriteHelper(cursor, length, mCRCBytesWritten, 4, mCRC);
 
 	frameWriteHelper(cursor, length, mPayloadBytesWritten, mLength, mPayload, false);
+
+	if (mPayloadBytesWritten == mLength)
+	{
+		// The entire payload has been read. Time to verify the CRC...
+		uint32_t calculatedCrc = 0;
+		calculatedCrc = CRC32::calculate(calculatedCrc, &mHeader.fullHeader, 2); // Only CRC the flags and opcode.
+		if (mLength >= uint16_t(-1))
+		{
+			// Only CRC the 64-bit length if needed.
+			uint64_t networkLen = htonll(mLength);
+			calculatedCrc = CRC32::calculate(calculatedCrc, &networkLen, sizeof(networkLen));
+		}
+		calculatedCrc = CRC32::calculate(calculatedCrc, &mMessageID, sizeof(mMessageID));
+		if (mHeader.headerParts.RSP == 1)
+		{
+			calculatedCrc = CRC32::calculate(calculatedCrc, &mRespondingToID, sizeof(mRespondingToID));
+		}
+		if (mHeader.headerParts.MASK == 1)
+		{
+			calculatedCrc = CRC32::calculate(calculatedCrc, &mMask, sizeof(mMask));
+		}
+		const static uint32_t blankCRC = 0;
+		calculatedCrc = CRC32::calculate(calculatedCrc, &blankCRC, sizeof(mCRC));
+		calculatedCrc = CRC32::calculate(calculatedCrc, mPayload, mLength);
+		if (htonl(calculatedCrc) != mCRC)
+		{
+			throw "CRC mismatch!";
+		}
+
+	}
 }
 
 uint64_t Frame::size(void) const
@@ -114,6 +144,6 @@ void Frame::size(uint64_t newSize)
 	{
 		delete [] mPayload;
 	}
-	mPayload = new char[mLength];
+	mPayload = new uint8_t[mLength];
 	mLengthSet = true;
 }
