@@ -4,31 +4,34 @@
 #include <cstdint>
 
 /**
- *  0                   1                   2                   3
- *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
- * +-+-+-+-+-+-+-+-+---------------+-------------------------------+
- * |F|R|M|R|R|R|R|R| Opcode        | Length (16/64 bits)           |
- * |I|S|A|S|S|S|S|S|               |                               |
- * |N|P|S|V|V|V|V|V|               |                               |
- * | | |K|0|1|2|3|4|               |                               |
- * +-+-+-+-+-+-+-+-+---------------+ - - - - - - - - - - - - - - - +
- * | Extended Length 8 bytes, if Length == 65535                   |
- * + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
- * | Extended Length continued.                                    |
- * +---------------------------------------------------------------+
- * | Message ID, 4 bytes                                           |
- * +---------------------------------------------------------------+
- * | Response to Message ID, 4 bytes,                              |
- * | if RSP == 1                                                   |
- * +---------------------------------------------------------------+
- * | Masking Key, if Mask == 1                                     |
- * +---------------------------------------------------------------+
- * | CRC32, if CRC == 1                                            |
- * +---------------------------------------------------------------+
- * | Payload Data ...                                              |
- * + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
- * |                                                           ... |
- * +---------------------------------------------------------------+
+ * NOTE - All values are in network-byte-order and MUST be properly converted to
+ *        host-byte-order.
+ *
+ *      0                   1                   2                   3
+ *      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ *     +-+-+-+-+-+-+-+-+---------------+-------------------------------+
+ *     |F|R|M|R|R|R|R|R| Opcode        | Length (16/64 bits)           |
+ *     |I|S|A|S|S|S|S|S|               |                               |
+ *     |N|P|S|V|V|V|V|V|               |                               |
+ *     | | |K|0|1|2|3|4|               |                               |
+ *     +-+-+-+-+-+-+-+-+---------------+ - - - - - - - - - - - - - - - +
+ *     | Extended Length 8 bytes, if Length == 65535                   |
+ *     + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+ *     | Extended Length continued.                                    |
+ *     +---------------------------------------------------------------+
+ *     | Message ID, 4 bytes                                           |
+ *     +---------------------------------------------------------------+
+ *     | Response to Message ID, 4 bytes,                              |
+ *     | if RSP == 1                                                   |
+ *     +---------------------------------------------------------------+
+ *     | Masking Key, if Mask == 1                                     |
+ *     +---------------------------------------------------------------+
+ *     | CRC32, if CRC == 1                                            |
+ *     +---------------------------------------------------------------+
+ *     | Payload Data ...                                              |
+ *     + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+ *     |                                                           ... |
+ *     +---------------------------------------------------------------+
  *
  * FIN: The final packet of a message. This indicates that the previous
  *     message has been completed.
@@ -97,6 +100,59 @@
  * 0xA Establish semi-persistent session
  *
  * 0xB-0xF Reserved for future control frames
+ *
+ * ----------------------------------------------------------------------------
+ * Establishing the opening handshake:
+ *
+ * When an initial Seance connection is being opened, a packet must be sent from
+ * the client to the server (initiator to target) specifying the version of the
+ * Seance protocol that the user (client/ initiator) wishes to use. The server
+ * (target) then responds with the highest protocol version which is less than
+ * or equal to the one requested by the client (initiator).
+ *
+ * If the server (target) doesn't support any version LTE the client's requested
+ * protocol version, then the server MUST close the connection at this point.
+ *
+ * For more information on version strings, see `Version Strings` below.
+ *
+ * The version handshake MUST be enclosed in a binary frame. And MUST NOT
+ * contain any other data.
+ *
+ * Examples:
+ *                                      +----------------------------------+
+ *                                      | KEY                              |
+ *                                      +----------------------------------+
+ *                                      | > Received by server from client |
+ *                                      | < Response from server to client |
+ *                                      +----------------------------------+
+ *
+ * In the case where the server only supports a lower version of the protocol
+ * than the client does:
+ * > MAJOR=1 MINOR=2 MICRO=3 BUILD=4
+ * < MAJOR=1 MINOR=2 MICRO=2 BUILD=0
+ *
+ * If the server supports the same version as the client:
+ * > MAJOR=1 MINOR=2 MICRO=3 BUILD=4
+ * < MAJOR=1 MINOR=2 MICRO=3 BUILD=4
+ *
+ * If the server only supports protocol versions greater than the client does:
+ * > MAJOR=1 MINOR=2 MICRO=3 BUILD=4
+ * *Server closes connection*
+ *
+ * ----------------------------------------------------------------------------
+ * Version Strings:
+ *
+ * The Seance protocol stores version strings as an eight byte value consisting
+ * of 4 16-bit (2-byte) unsigned integral values. The 4 values contain
+ * information as follows:
+ *      0                   1                   2                   3
+ *      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2
+ *     +---------------------------------+-------------------------------+
+ *     | MAJOR (2 bytes)                 | MINOR (2 bytes)               |
+ *     +---------------------------------+-------------------------------+
+ *     | MICRO (2 bytes)                 | BUILD (2 bytes)               |
+ *     +---------------------------------+-------------------------------+
+ *
  *
  */
 
