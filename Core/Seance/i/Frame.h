@@ -99,7 +99,9 @@
  *
  * 0xA Establish semi-persistent session
  *
- * 0xB-0xF Reserved for future control frames
+ * 0xB Negotiate extensions
+ *
+ * 0xC-0xF Reserved for future control frames
  *
  * ----------------------------------------------------------------------------
  * Establishing the opening handshake:
@@ -138,6 +140,34 @@
  * If the server only supports protocol versions greater than the client does:
  * > MAJOR=1 MINOR=2 MICRO=3 BUILD=4
  * *Server closes connection*
+ *
+ * ----------------------------------------------------------------------------
+ * Continuation Frames
+ *
+ * Continuation frames are used to continue a previously started frame if, for
+ * instance, not all data was ready to send when the original frame was sent.
+ * This may frequently be the case in streaming applications where only a small
+ * buffer of data is sent at a time.
+ *
+ * ----------------------------------------------------------------------------
+ * Text Frames
+ *
+ * Text frames are UTF-8 encoded character data.
+ *
+ * ----------------------------------------------------------------------------
+ * Binary Frames
+ *
+ * Binary frames allow for arbitrary data to be sent between the client and
+ * server.
+ *
+ * ----------------------------------------------------------------------------
+ * Extension Frames
+ *
+ * Extension frames are sent with the first 8 bytes of the Payload being the
+ * extension ID associated with the extension which should be run with the
+ * remainder of the Payload data. In this case, all Payload data _after_ the
+ * extension ID will be sent on to the extension as well as the length of the
+ * forwarded Payload (in bytes - Payload Length minus 8 bytes).
  *
  * ----------------------------------------------------------------------------
  * Version Strings:
